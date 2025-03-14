@@ -7,8 +7,16 @@
 
 {# Add the appropriate method and enctype attributes to the form tag to allow for file uploads #}
 <form method="POST" enctype="multipart/form-data" action="{{ url_for('upload') }}">
+  {% csrf_token %}
 
-  {# Add the file upload field as you learnt for Flask-WTF #}
+  {# Add the file upload field for Flask-WTF #}
+  <div class="form-group">
+    {{ form.file.label(class="form-label") }}  {# Render the label #}
+    {{ form.file(class="form-control") }}  {# Render the file input #}
+    {% for error in form.file.errors %}
+        <div class="text-danger">{{ error }}</div>  {# Display any validation errors #}
+    {% endfor %}
+</div>
 
   <button type="submit" name="submit" class="btn btn-primary">Upload file</button>
 </form>

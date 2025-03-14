@@ -1,6 +1,6 @@
 import os
 from app import app, db, login_manager
-from flask import render_template, request, redirect, url_for, flash, session, abort
+from flask import render_template, request, redirect, url_for, flash, session, abort, send_from_directory
 from flask_login import login_user, logout_user, current_user, login_required
 from werkzeug.utils import secure_filename
 from werkzeug.security import check_password_hash
@@ -36,7 +36,7 @@ def upload():
         # Get file data and save to your uploads folder
         file = form.file.data
         filename = secure_filename(file.filename)
-        
+
         # Save the file to the upload folder
         file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
 
@@ -74,6 +74,23 @@ def login():
 
     return render_template("login.html", form=form)
 
+@app.route('/uploads/<filename>')
+def get_image(filename):
+    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
+
+@app.route('/files')
+@login_required  # Ensure only logged-in users can access this route
+def files():
+    image_filenames = get_uploaded_images()  # Get the list of uploaded images
+    return render_template('files.html', images=image_filenames)
+
+@app.route('/logout')
+@login_required  # Ensure only logged-in users can access this route
+def logout():
+    logout_user()  # Log out the user
+    flash('You have been logged out successfully.', 'success')  # Flash message
+    return redirect(url_for('home'))  # Redirect to the home route
+
 # user_loader callback. This callback is used to reload the user object from
 # the user ID stored in the session
 @login_manager.user_loader
@@ -92,6 +109,17 @@ def flash_errors(form):
                 getattr(form, field).label.text,
                 error
 ), 'danger')
+            
+def get_uploaded_images():
+    upload_folder = app.config['UPLOAD_FOLDER']
+    images = []
+    
+    # Iterate over the contents of the uploads folder
+    for subdir, dirs, files in os.walk(upload_folder):
+        for file in files:
+            images.append(file)
+    
+    return images
 
 @app.route('/<file_name>.txt')
 def send_text_file(file_name):
