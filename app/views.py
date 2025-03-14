@@ -4,13 +4,14 @@ from flask import render_template, request, redirect, url_for, flash, session, a
 from flask_login import login_user, logout_user, current_user, login_required
 from werkzeug.utils import secure_filename
 from werkzeug.security import check_password_hash
+from wtforms import FileField, SubmitField
 from app.models import UserProfile
 from app.forms import LoginForm
 from app.forms import UploadForm
 
 
 ###
-# Routing for your application.
+# Routing for application.
 ###
 
 @app.route('/')
@@ -28,12 +29,12 @@ def about():
 @app.route('/upload', methods=['POST', 'GET'])
 @login_required
 def upload():
-    # Instantiate your form class
+    # form class instantiation
     form = UploadForm()
 
     # Validate file upload on submit
     if form.validate_on_submit():
-        # Get file data and save to your uploads folder
+        # Get file data and save to the uploads folder
         file = form.file.data
         filename = secure_filename(file.filename)
 
@@ -43,15 +44,13 @@ def upload():
         flash('File Saved', 'success')
         return redirect(url_for('upload'))
 
-    return render_template('upload.html')
+    return render_template('upload.html', form=form)
 
 
 @app.route('/login', methods=['POST', 'GET'])
 def login():
     form = LoginForm()
 
-    # change this to actually validate the entire form submission
-    # and not just one field
     if form.validate_on_submit():
         # Get the username and password values from the form.
         username = form.username.data
@@ -118,7 +117,6 @@ def get_uploaded_images():
     for subdir, dirs, files in os.walk(upload_folder):
         for file in files:
             images.append(file)
-    
     return images
 
 @app.route('/<file_name>.txt')
